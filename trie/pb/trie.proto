@@ -1,0 +1,11 @@
+syntax = "proto3";
+package triepb;
+
+message child {
+    uint32 type = 1;
+    bytes val = 2;
+}
+
+message node {
+    repeated child children = 1; // length: 17-full, 2-short, 1-hash/value/nest
+}
