@@ -1,6 +1,7 @@
 package blockchain
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -8,6 +9,7 @@ import (
 	"github.com/massnetorg/mass-core/consensus"
 	"github.com/massnetorg/mass-core/massutil"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestCalcBlockSubsidy(t *testing.T) {
@@ -135,7 +137,7 @@ func TestMASSIP2CalcBlockSubsidy(t *testing.T) {
 	amount22500000, _ := massutil.NewAmountFromInt(22500000)
 	amount2500000, _ := massutil.NewAmountFromInt(2500000)
 
-	assert.True(t, fakeMASSIP2SubsidyStartHeight == uint64(336420), fakeMASSIP2SubsidyStartHeight)
+	assert.True(t, fakeMASSIP2SubsidyStartHeight == uint64(341121), fakeMASSIP2SubsidyStartHeight)
 
 	tests := []struct {
 		name      string
@@ -215,4 +217,55 @@ func TestMASSIP2CalcBlockSubsidy(t *testing.T) {
 			assert.Equal(t, test.superNode.String(), resSuperNode.String())
 		})
 	}
+}
+
+func ExampleCalcBlockSubsidy(t *testing.T) {
+	for i := uint64(1404798); i <= 1404802; i++ {
+		miner, node, err := CalcBlockSubsidy(i, &config.ChainParams, true, true)
+		require.NoError(t, err)
+		fmt.Println(i, miner, node)
+	}
+	fmt.Println("-------------------")
+	for i := uint64(1480318); i <= 1480322; i++ {
+		miner, node, err := CalcBlockSubsidy(i, &config.ChainParams, true, true)
+		require.NoError(t, err)
+		fmt.Println(i, miner, node)
+	}
+	fmt.Println("-------------------")
+	for i := uint64(56100478); i <= 56100482; i++ {
+		miner, node, err := CalcBlockSubsidy(i, &config.ChainParams, true, true)
+		require.NoError(t, err)
+		fmt.Println(i, miner, node)
+	}
+	fmt.Println("-------------------")
+	for i := uint64(111150718); i <= 111150722; i++ {
+		miner, node, err := CalcBlockSubsidy(i, &config.ChainParams, true, true)
+		require.NoError(t, err)
+		fmt.Println(i, miner, node)
+	}
+
+	// Output
+	// 1404798 3 MASS 3 MASS
+	// 1404799 3 MASS 3 MASS
+	// 1404800 3 MASS 3 MASS
+	// 1404801 57.6 MASS 6.4 MASS
+	// 1404802 57.6 MASS 6.4 MASS
+	// -------------------
+	// 1480318 57.6 MASS 6.4 MASS
+	// 1480319 57.6 MASS 6.4 MASS
+	// 1480320 57.6 MASS 6.4 MASS
+	// 1480321 28.8 MASS 3.2 MASS
+	// 1480322 28.8 MASS 3.2 MASS
+	// -------------------
+	// 56100478 0.45 MASS 0.05 MASS
+	// 56100479 0.45 MASS 0.05 MASS
+	// 56100480 0.45 MASS 0.05 MASS
+	// 56100481 0.225 MASS 0.025 MASS
+	// 56100482 0.225 MASS 0.025 MASS
+	// -------------------
+	// 111150718 0.225 MASS 0.025 MASS
+	// 111150719 0.225 MASS 0.025 MASS
+	// 111150720 0.225 MASS 0.025 MASS
+	// 111150721 0 MASS 0 MASS
+	// 111150722 0 MASS 0 MASS
 }
