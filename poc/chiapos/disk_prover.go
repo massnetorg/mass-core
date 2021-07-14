@@ -5,7 +5,7 @@ package chiapos
 #include <stdio.h>
 
 #cgo CFLAGS:
-
+#cgo windows,amd64 LDFLAGS:  -L./libs -lchiapos_cgo
 #cgo darwin,amd64 LDFLAGS: -L./libs -lchiapos_cgo-darwin-amd64 -lfse-darwin-amd64
 #cgo linux,amd64 LDFLAGS: -L./libs -lchiapos_cgo-linux-amd64 -lfse-linux-amd64 -lm
 
@@ -49,12 +49,12 @@ func NewDiskProver(filename string, loadPlotInfo bool) (*DiskProver, error) {
 	if cerr != nil {
 		defer C.free(unsafe.Pointer(cerr))
 
-		logging.CPrint(logging.INFO, "open disk prover failed", logging.LogFormat{"err": C.GoString(cerr)})
+		logging.CPrint(logging.DEBUG, "open disk prover failed", logging.LogFormat{"err": C.GoString(cerr)})
 
 		return nil, fmt.Errorf(C.GoString(cerr))
 	}
 
-	logging.CPrint(logging.INFO, "disk prover open", logging.LogFormat{"filename": filename})
+	logging.CPrint(logging.DEBUG, "disk prover open", logging.LogFormat{"filename": filename})
 
 	dp := &DiskProver{
 		ptr:      cdp,
@@ -263,7 +263,7 @@ func (dp *DiskProver) GetFullProof(challenge [32]byte, index uint32) ([]byte, er
 	C.GetFullProof(dp.ptr, (*C.uchar)(cPtr), C.uint(index), &out, &length, &cerr)
 	if cerr != nil {
 		defer C.free(unsafe.Pointer(cerr))
-		logging.CPrint(logging.INFO, "get full proof failed", logging.LogFormat{"err": C.GoString(cerr)})
+		logging.CPrint(logging.DEBUG, "get full proof failed", logging.LogFormat{"err": C.GoString(cerr)})
 		return nil, fmt.Errorf(C.GoString(cerr))
 	}
 
@@ -275,7 +275,7 @@ func (dp *DiskProver) GetFullProof(challenge [32]byte, index uint32) ([]byte, er
 func (dp *DiskProver) Close() error {
 	if dp.ptr != nil {
 		C.DeleteDiskProver(dp.ptr)
-		logging.CPrint(logging.INFO, "disk prover closed", logging.LogFormat{"filename": dp.filename})
+		logging.CPrint(logging.DEBUG, "disk prover closed", logging.LogFormat{"filename": dp.filename})
 		dp.ptr = nil
 	}
 	return nil

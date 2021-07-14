@@ -5,7 +5,7 @@ package chiapos
 #include <stdio.h>
 
 #cgo CFLAGS:
-
+#cgo windows,amd64 LDFLAGS: -L./libs -lbls_cgo-windows-amd64 -lbls-windows-amd64 -lstdc++
 #cgo darwin,amd64 LDFLAGS: -L./libs -lbls_cgo-darwin-amd64 -lbls-darwin-amd64 -lstdc++
 #cgo linux,amd64 LDFLAGS: -L./libs -lbls_cgo-linux-amd64 -lbls-linux-amd64 -lstdc++
 

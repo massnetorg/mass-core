@@ -125,6 +125,17 @@ ENDIF()
 
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/../libs)
 
+if (MSVC)
+add_library(chiapos_cgo 
+    SHARED
+    src/plotter_disk.hpp
+    src/prover_disk.hpp
+    src/verifier.hpp
+    src/chacha8.c 
+    ${BLAKE3_SRC}
+    prover.cc
+)
+ELSE()
 add_library(chiapos_cgo 
     STATIC
     src/plotter_disk.hpp
@@ -134,6 +145,7 @@ add_library(chiapos_cgo
     ${BLAKE3_SRC}
     prover.cc
 )
+ENDIF()
 
 add_executable(ProofOfSpace
     src/cli.cpp

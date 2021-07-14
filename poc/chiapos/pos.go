@@ -5,7 +5,7 @@ package chiapos
 #include <stdio.h>
 
 #cgo CFLAGS:
-
+#cgo windows,amd64 LDFLAGS:  -L./libs -lchiapos_cgo
 #cgo darwin,amd64 LDFLAGS: -L./libs -lchiapos_cgo-darwin-amd64
 #cgo linux,amd64 LDFLAGS: -L./libs -lchiapos_cgo-linux-amd64
 
@@ -17,7 +17,10 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"unsafe"
+
+	"github.com/massnetorg/mass-core/logging"
 )
 
 const (
@@ -198,18 +201,25 @@ func (pv *ProofVerifier) GetVerifiedQuality(plotSeed, proof []byte, challenge [3
 
 	var out *C.uchar
 	var outLen C.int
+	var cerr *C.char
 
 	C.ValidateProof(pv.verifierPtr, C.uchar(k),
 		(*C.uchar)(seed),
 		(*C.uchar)(ch),
 		(*C.uchar)(cproof), C.size_t(len(proof)),
-		&out, &outLen)
-	if int(outLen) == 0 {
-		return nil, nil
+		&out, &outLen, &cerr)
+	if cerr != nil {
+		defer C.free(unsafe.Pointer(cerr))
+		logging.CPrint(logging.WARN, "get verified quality failed", logging.LogFormat{"err": C.GoString(cerr)})
+		return nil, fmt.Errorf(C.GoString(cerr))
 	}
-	defer C.free(unsafe.Pointer(out))
 
-	return C.GoBytes(unsafe.Pointer(out), outLen), nil
+	if out != nil {
+		// TODO: crash on windows, so comment it with mem leak on windows.
+		defer C.free(unsafe.Pointer(out))
+		return C.GoBytes(unsafe.Pointer(out), outLen), nil
+	}
+	return nil, nil
 }
 
 func (pv *ProofVerifier) Free() {

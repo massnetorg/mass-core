@@ -107,7 +107,7 @@ func encodeBlock(writer io.Writer, block *wire.MsgBlock) error {
 func decodeBlock(reader io.Reader) (*wire.MsgBlock, error) {
 	// read size
 	sizeBuf := make([]byte, 4)
-	n, err := reader.Read(sizeBuf)
+	n, err := io.ReadFull(reader, sizeBuf)
 	if err != nil {
 		return nil, err
 	}
@@ -118,7 +118,7 @@ func decodeBlock(reader io.Reader) (*wire.MsgBlock, error) {
 
 	// read height, hash, raw
 	data := make([]byte, size)
-	n, err = reader.Read(data)
+	n, err = io.ReadFull(reader, data)
 	if err != nil {
 		return nil, err
 	}

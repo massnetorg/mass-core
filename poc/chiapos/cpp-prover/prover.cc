@@ -195,23 +195,31 @@ void ValidateProof(const void *vf, uint8_t k,
     const unsigned char *challenge,
     const unsigned char *proof, size_t plen, 
     unsigned char **out,
-    int *len
+    int *len,
+    char **err
 ) {
     Verifier *verifier = static_cast<Verifier *>(const_cast<void *>(vf));
 
-    LargeBits quality = verifier->ValidateProof(
-        reinterpret_cast<const uint8_t *>(seed), 
-        k, 
-        reinterpret_cast<const uint8_t *>(challenge), 
-        reinterpret_cast<const uint8_t *>(proof), 
-        plen
-    );
-    if (quality.GetSize() != 0) {
-        uint8_t *quality_buf = (uint8_t *)malloc(32);
-        memset(quality_buf, 0, 32);
-        quality.ToBytes(quality_buf);
-        *out = quality_buf;
-        *len = 32;
+    try
+    {
+        LargeBits quality = verifier->ValidateProof(
+            reinterpret_cast<const uint8_t *>(seed), 
+            k, 
+            reinterpret_cast<const uint8_t *>(challenge), 
+            reinterpret_cast<const uint8_t *>(proof), 
+            plen
+        );
+        if (quality.GetSize() != 0) {
+            uint8_t *quality_buf = (uint8_t *)malloc(32);
+            quality.ToBytes(quality_buf);
+            *out = quality_buf;
+            *len = 32;
+        }
+    }
+    catch(const std::exception& e)
+    {
+        *err = (char *)malloc(strlen(e.what()));
+        strcpy(*err, e.what());
     }
 }
 

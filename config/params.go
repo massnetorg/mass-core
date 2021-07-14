@@ -121,7 +121,7 @@ var ChainParams = Params{
 
 	// Checkpoints ordered from oldest to newest.
 	Checkpoints: []Checkpoint{
-		{1378000, newHashFromStr("aa1a79b66efa4f2105797899cf8c7f6a261f6b6e7f48310e921d74e66d7e9c91")},
+		{1390000, newHashFromStr("bd02ce24fa5dbf6354a19def8e1de746a832bf904e4f9421d7355d166e8acf79")},
 	},
 
 	// Mempool parameters

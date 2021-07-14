@@ -20,9 +20,9 @@ include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}/../contrib/catch
   )
 
-if (GMP_FOUND)
-  include_directories(${GMP_INCLUDES})
-endif(GMP_FOUND)
+##if (GMP_FOUND)
+#  include_directories(${GMP_INCLUDES})
+#endif(GMP_FOUND)
 
 # pybind11_add_module(blspy ${CMAKE_CURRENT_SOURCE_DIR}/pythonbindings.cpp)
 

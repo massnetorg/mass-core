@@ -1,7 +1,9 @@
 #ifndef _GO_DISKPROVER_H_
 #define _GO_DISKPROVER_H_
 
-#if BUILDING_DLL
+#if defined(_MSC_VER)
+#define EXPORT  __declspec(dllexport)
+#elif BUILDING_DLL
 #define EXPORT __attribute__((__visibility__("default")))
 #else
 #define EXPORT
@@ -59,7 +61,9 @@ EXPORT void ValidateProof(const void *vf, uint8_t k,
         const unsigned char *seed,
         const unsigned char *challenge,
         const unsigned char *proof, size_t plen, 
-        unsigned char **out, int *len);
+        unsigned char **out,
+        int *len,
+        char **err);
 EXPORT void DeleteVerifier(void *dp);
 
 #ifdef __cplusplus

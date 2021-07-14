@@ -28,9 +28,9 @@ include_directories(
   ${relic_BINARY_DIR}/include
   )
 
-if (GMP_FOUND)
-  include_directories(${GMP_INCLUDES})
-endif(GMP_FOUND)
+#if (GMP_FOUND)
+#  include_directories(${GMP_INCLUDES})
+#endif(GMP_FOUND)
 
 set(C_LIB ${CMAKE_BINARY_DIR}/../../libs/libbls.a)
 
@@ -47,14 +47,24 @@ set(OPREFIX object_)
 find_library(GMP_NAME NAMES libgmp.a gmp)
 find_library(SODIUM_NAME NAMES libsodium.a sodium)
 
-set(LIBRARIES_TO_COMBINE
+if (WIN32)
+  set(LIBRARIES_TO_COMBINE
+      COMMAND if not exist ${OPREFIX}$<TARGET_NAME:blstmp> mkdir ${OPREFIX}$<TARGET_NAME:blstmp>
+      COMMAND cd ${OPREFIX}$<TARGET_NAME:blstmp> &&  ${CMAKE_AR} -x $<TARGET_FILE:blstmp>
+      COMMAND if not exist ${OPREFIX}$<TARGET_NAME:relic_s> mkdir ${OPREFIX}$<TARGET_NAME:relic_s>
+      COMMAND cd ${OPREFIX}$<TARGET_NAME:relic_s> &&  ${CMAKE_AR} -x $<TARGET_FILE:relic_s>
+  )
+else()
+  set(LIBRARIES_TO_COMBINE
       COMMAND mkdir ${OPREFIX}$<TARGET_NAME:blstmp> || true && cd ${OPREFIX}$<TARGET_NAME:blstmp> &&  ${CMAKE_AR} -x $<TARGET_FILE:blstmp>
       COMMAND mkdir ${OPREFIX}$<TARGET_NAME:relic_s> || true && cd ${OPREFIX}$<TARGET_NAME:relic_s> &&  ${CMAKE_AR} -x $<TARGET_FILE:relic_s>
-)
-
-if (GMP_FOUND)
-  list(APPEND LIBRARIES_TO_COMBINE COMMAND mkdir ${OPREFIX}gmp || true && cd ${OPREFIX}gmp &&  ${CMAKE_AR} -x ${GMP_NAME})
+  )
 endif()
+
+#if (GMP_FOUND)
+#  list(APPEND LIBRARIES_TO_COMBINE COMMAND mkdir ${OPREFIX}gmp || true && cd ${OPREFIX}gmp &&  ${CMAKE_AR} -x ${GMP_NAME})
+#endif()
+
 if (SODIUM_FOUND)
   message("SODIUM_FOUND in src/CMakeLists.txt")
   list(APPEND LIBRARIES_TO_COMBINE COMMAND mkdir ${OPREFIX}sodium || true && cd ${OPREFIX}sodium &&  ${CMAKE_AR} -x ${SODIUM_NAME})
@@ -63,12 +73,22 @@ else()
   target_compile_definitions(blstmp PRIVATE)
 endif()
 
-add_custom_target(combined_custom
+if (WIN32)
+    add_custom_target(combined_custom
+        ${LIBRARIES_TO_COMBINE}
+        COMMAND ${CMAKE_AR} -rs ${C_LIB} ${OPREFIX}blstmp/*${CMAKE_C_OUTPUT_EXTENSION}
+        COMMAND ${CMAKE_AR} -rs ${C_LIB} ${OPREFIX}relic_s/*${CMAKE_C_OUTPUT_EXTENSION}
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+        DEPENDS blstmp relic_s
+        )
+else()
+    add_custom_target(combined_custom
         ${LIBRARIES_TO_COMBINE}
         COMMAND ${CMAKE_AR} -rs ${C_LIB} ${OPREFIX}*/*${CMAKE_C_OUTPUT_EXTENSION}
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
         DEPENDS blstmp relic_s
         )
+endif()
 
 add_library(combined STATIC IMPORTED GLOBAL)
 add_dependencies(combined combined_custom)

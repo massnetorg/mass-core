@@ -159,7 +159,7 @@ func TestGetRequiredBinding(t *testing.T) {
 			plotsize:       32*1024*1024*1024*2 - 1,
 			bitlength:      20,
 			networkBinding: newAmount(300000000000001),
-			expectRequired: newAmount(67138671),
+			expectRequired: newAmount(50860595),
 		},
 		{
 			name:           "64GB",
@@ -167,14 +167,14 @@ func TestGetRequiredBinding(t *testing.T) {
 			plotsize:       32 * 1024 * 1024 * 1024 * 2,
 			bitlength:      20,
 			networkBinding: newAmount(300000000000001),
-			expectRequired: newAmount(67138671 * 2),
+			expectRequired: newAmount(50860595 * 2),
 		},
 		{
 			name:           "1TB and no pre calculated price found",
 			height:         consensus.MASSIP0002WarmUpHeight,
 			plotsize:       1024 * 1024 * 1024 * 1024,
 			bitlength:      -1,
-			networkBinding: newAmount(1767492400000001), // 1 Maxwell more than 3000PB
+			networkBinding: newAmount(1580825600000001), // 1 Maxwell more than 3000PB
 			expectRequired: newAmount(4919433 * 32),
 		},
 		{
@@ -182,7 +182,7 @@ func TestGetRequiredBinding(t *testing.T) {
 			height:         consensus.MASSIP0002WarmUpHeight,
 			plotsize:       160 * 1024 * 1024 * 1024 * 1024,
 			bitlength:      -1,
-			networkBinding: newAmount(2009600700000000), // 4900PB
+			networkBinding: newAmount(1822933900000000), // 4900PB
 			expectRequired: newAmount(3112792 * 32 * 160),
 		},
 	}
