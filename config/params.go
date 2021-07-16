@@ -121,6 +121,14 @@ var ChainParams = Params{
 
 	// Checkpoints ordered from oldest to newest.
 	Checkpoints: []Checkpoint{
+		{150000, newHashFromStr("b5864e69b3639fde4dbe2496c9f9f5164591917082eb95c0d99022513286b0f2")},
+		{300000, newHashFromStr("ae09d31fa05a1df7eb4e81fcf14db533d64533b134f96f9afa5a2ab5cfb086c5")},
+		{450000, newHashFromStr("677e150515e016e04d7fb3532a69fc99a27a74acb10819827a015a3f9fe19542")},
+		{600000, newHashFromStr("bb10bd5a7ab626b61eefb387d906e76ea69fb08912fbc0cb031e489157381b81")},
+		{750000, newHashFromStr("669c2fae2e772623d985f364478fff25bb4a39d9d986493d8236f01e8abab78d")},
+		{900000, newHashFromStr("1b78fbfc8e7b3a0bcdd82ab16da3a5136d974bc51b108519584b08f1d879334c")},
+		{1050000, newHashFromStr("8c929a910184a8558cf40a11b887582bd08e0b6a2814b291ccc891423466f9cd")},
+		{1200000, newHashFromStr("965fd52574178734be81c1d75d632090e5bfa3607d35e4d27487fccff993c042")},
 		{1390000, newHashFromStr("bd02ce24fa5dbf6354a19def8e1de746a832bf904e4f9421d7355d166e8acf79")},
 	},
 

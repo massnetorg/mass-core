@@ -18,6 +18,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"runtime"
 	"unsafe"
 
 	"github.com/massnetorg/mass-core/logging"
@@ -216,7 +217,9 @@ func (pv *ProofVerifier) GetVerifiedQuality(plotSeed, proof []byte, challenge [3
 
 	if out != nil {
 		// TODO: crash on windows, so comment it with mem leak on windows.
-		defer C.free(unsafe.Pointer(out))
+		if runtime.GOOS != "windows" {
+			defer C.free(unsafe.Pointer(out))
+		}
 		return C.GoBytes(unsafe.Pointer(out), outLen), nil
 	}
 	return nil, nil

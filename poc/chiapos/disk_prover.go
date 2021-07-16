@@ -14,6 +14,7 @@ package chiapos
 import "C"
 
 import (
+	"errors"
 	"fmt"
 	"unsafe"
 
@@ -153,6 +154,9 @@ func (dp *DiskProver) getPlotInfo() (*PlotInfo, error) {
 		copy(info.PuzzleHash[:], memo[:32])
 	default:
 		return nil, fmt.Errorf("memo has invalid number of bytes %d", len(memo))
+	}
+	if info.PoolPublicKey == nil {
+		return nil, errors.New("pool_public_key must be valid")
 	}
 	info.LocalSk, err = MasterSkToLocalSk(info.MasterSk)
 	if err != nil {

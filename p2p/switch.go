@@ -569,10 +569,10 @@ func (sw *Switch) dialPeerWorker(a *NetAddress, wg *sync.WaitGroup) {
 func (sw *Switch) ensureOutboundPeers() {
 	numOutPeers, _, numDialing := sw.NumPeers()
 	numToDial := minNumOutboundPeers - (numOutPeers + numDialing)
-	logging.CPrint(logging.INFO, "ensure peers", logging.LogFormat{"num_out_peers": numOutPeers, "num_dialing": numDialing, "num_to_dial": numToDial})
 	if numToDial <= 0 {
 		return
 	}
+	logging.CPrint(logging.INFO, "ensure peers", logging.LogFormat{"num_out_peers": numOutPeers, "num_dialing": numDialing, "num_to_dial": numToDial})
 
 	connectedPeers := make(map[string]struct{})
 	for _, peer := range sw.Peers().List() {
@@ -583,7 +583,7 @@ func (sw *Switch) ensureOutboundPeers() {
 	nodes := make([]*discover.Node, numToDial)
 	n := sw.discv.ReadRandomNodes(nodes)
 	for i := 0; i < n; i++ {
-		logging.CPrint(logging.INFO, "p2p random nodes", logging.LogFormat{
+		logging.CPrint(logging.DEBUG, "p2p random nodes", logging.LogFormat{
 			"node": nodes[i].IP,
 			"port": nodes[i].TCP,
 		})
