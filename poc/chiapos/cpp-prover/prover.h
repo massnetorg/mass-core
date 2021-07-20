@@ -66,6 +66,9 @@ EXPORT void ValidateProof(const void *vf, uint8_t k,
         char **err);
 EXPORT void DeleteVerifier(void *dp);
 
+// for chiapos_cgo.dll, which built by MSVC
+EXPORT void FreeForWin(void *p);
+
 #ifdef __cplusplus
 }
 #endif // __cplusplus

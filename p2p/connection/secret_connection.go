@@ -265,7 +265,7 @@ func shareAuthSignature(sc *SecretConnection, pubKey crypto.PubKeyEd25519, signa
 	if err2 != nil {
 		return nil, err2
 	}
-	logging.CPrint(logging.INFO, "shareAuthSignature info", logging.LogFormat{
+	logging.CPrint(logging.DEBUG, "shareAuthSignature info", logging.LogFormat{
 		"bytes_written": msgBytesLen,
 		"bytes_read":    recvMsgLen,
 	})
@@ -292,7 +292,7 @@ func shareEphPubKey(conn io.ReadWriteCloser, locEphPub *[32]byte) (remEphPub *[3
 	if err2 != nil {
 		return nil, err2
 	}
-	logging.CPrint(logging.INFO, "shareEphPubKey info", logging.LogFormat{
+	logging.CPrint(logging.DEBUG, "shareEphPubKey info", logging.LogFormat{
 		"bytes_written": nWritten,
 		"bytes_read":    nRead,
 	})

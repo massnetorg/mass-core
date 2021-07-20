@@ -37,13 +37,13 @@ func TestDiskProver(t *testing.T) {
 	fmt.Println(fp)
 }
 
-func TestGetInfo(t *testing.T) {
-	dp, err := chiapos.NewDiskProver("./testplots/plot.dat", false)
-	if err != nil {
-		t.Fatalf("NewDiskProver: %s", err)
-	}
-	defer dp.Close()
+// func TestGetInfo(t *testing.T) {
+// 	dp, err := chiapos.NewDiskProver("./testplots/plot.dat", false)
+// 	if err != nil {
+// 		t.Fatalf("NewDiskProver: %s", err)
+// 	}
+// 	defer dp.Close()
 
-	pi := dp.PlotInfo()
-	fmt.Println(pi.FarmerPublicKey.Bytes(), pi.PoolPublicKey.Bytes())
-}
+// 	pi := dp.PlotInfo()
+// 	fmt.Println(pi.FarmerPublicKey.Bytes(), pi.PoolPublicKey.Bytes())
+// }

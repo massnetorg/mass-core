@@ -210,19 +210,13 @@ func (pv *ProofVerifier) GetVerifiedQuality(plotSeed, proof []byte, challenge [3
 		(*C.uchar)(cproof), C.size_t(len(proof)),
 		&out, &outLen, &cerr)
 	if cerr != nil {
-		defer C.free(unsafe.Pointer(cerr))
+		defer localCFree(unsafe.Pointer(cerr))
 		logging.CPrint(logging.WARN, "get verified quality failed", logging.LogFormat{"err": C.GoString(cerr)})
 		return nil, fmt.Errorf(C.GoString(cerr))
 	}
 
-	if out != nil {
-		// TODO: crash on windows, so comment it with mem leak on windows.
-		if runtime.GOOS != "windows" {
-			defer C.free(unsafe.Pointer(out))
-		}
-		return C.GoBytes(unsafe.Pointer(out), outLen), nil
-	}
-	return nil, nil
+	defer localCFree(unsafe.Pointer(out))
+	return C.GoBytes(unsafe.Pointer(out), outLen), nil
 }
 
 func (pv *ProofVerifier) Free() {
@@ -244,8 +238,15 @@ func CalculatePosChallenge(plotID, challenge [32]byte) [32]byte {
 	return Hash256(data[:])
 }
 
-// TODO: confirm algorithm
 func PassPlotFilter(plotID, challenge [32]byte) bool {
 	input := CalculatePlotFilterInput(plotID, challenge)
 	return (input[0] == 0) && (input[1]&0b10000000 == 0)
+}
+
+func localCFree(p unsafe.Pointer) {
+	if runtime.GOOS != "windows" {
+		C.free(p)
+	} else {
+		C.FreeForWin(p)
+	}
 }

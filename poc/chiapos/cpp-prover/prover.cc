@@ -214,6 +214,7 @@ void ValidateProof(const void *vf, uint8_t k,
             quality.ToBytes(quality_buf);
             *out = quality_buf;
             *len = 32;
+            // printf("ValidateProof malloc pointer %lu\n", (uintptr_t)quality_buf);
         }
     }
     catch(const std::exception& e)
@@ -223,7 +224,16 @@ void ValidateProof(const void *vf, uint8_t k,
     }
 }
 
-void DeleteVerifier(void *v) {
+void FreeForWin(void *p)
+{
+    if (p != NULL) {
+        // printf("ValidateProof free pointer %lu\n", (uintptr_t)p);
+        free(p);
+    }
+}
+
+void DeleteVerifier(void *v) 
+{
     if (v != NULL) {
         delete static_cast<Verifier *>(v);
     }
