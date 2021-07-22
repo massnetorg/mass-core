@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/massnetorg/mass-core/blockchain/state"
 	"github.com/massnetorg/mass-core/config"
 	"github.com/massnetorg/mass-core/consensus/forks"
 	"github.com/massnetorg/mass-core/database"
@@ -22,6 +23,7 @@ func (chain *Blockchain) validateCoinbase(
 	txInputStore TxStore,
 	totalFees massutil.Amount,
 	net *config.Params,
+	reorgBindingState state.Trie,
 ) (err error) {
 
 	coinbaseTx := block.Transactions()[0]
@@ -56,11 +58,13 @@ func (chain *Blockchain) validateCoinbase(
 		hasValidBinding = totalBinding.Cmp(requiredBinding) >= 0
 
 	} else if forks.EnforceMASSIP0002(block.Height()) {
-		parentBindingState, err := node.ParentBindingState(chain.stateBindingDb)
-		if err != nil {
-			return err
+		parentBindingState := reorgBindingState
+		if parentBindingState == nil { // TODO: maybe use flags is better
+			parentBindingState, err = node.ParentBindingState(chain.stateBindingDb)
+			if err != nil {
+				return err
+			}
 		}
-
 		// Check chia header if coinbase address is the one bound to pool pk.
 		if header.Proof.Type() == poc.ProofTypeChia {
 			poolPk, err := poc.GetChiaPoolPublicKey(header.Proof)

@@ -29,14 +29,14 @@ func TestCheckConnectBlock(t *testing.T) {
 	blk0, err := loadNthBlk(1)
 	assert.Nil(t, err)
 	genesisHash := blk0.Hash()
-	err = chain.checkConnectBlock(NewBlockNode(&blk0.MsgBlock().Header, genesisHash, BFNone), blk0, BFNone)
+	err = chain.checkConnectBlock(NewBlockNode(&blk0.MsgBlock().Header, genesisHash, BFNone), blk0, BFNone, nil)
 	assert.Equal(t, ErrConnectGenesis, err)
 
 	blk1, err := loadNthBlk(2)
 	assert.Nil(t, err)
 	assert.Equal(t, uint64(1), blk1.Height())
 	blk1Hash := blk1.Hash()
-	err = chain.checkConnectBlock(NewBlockNode(&blk1.MsgBlock().Header, blk1Hash, BFNone), blk1, BFNone)
+	err = chain.checkConnectBlock(NewBlockNode(&blk1.MsgBlock().Header, blk1Hash, BFNone), blk1, BFNone, nil)
 	assert.Nil(t, err)
 }
 

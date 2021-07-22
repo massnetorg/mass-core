@@ -44,8 +44,9 @@ type Peer struct {
 	cmn.BaseService
 	*NodeInfo
 	*peerConn
-	mconn *connection.MConnection // multiplex connection
-	Key   string
+	mconn         *connection.MConnection // multiplex connection
+	Key           string
+	isTrustworthy bool
 }
 
 // OnStart implements BaseService.
@@ -61,12 +62,13 @@ func (p *Peer) OnStop() {
 	p.mconn.Stop()
 }
 
-func newPeer(pc *peerConn, nodeInfo *NodeInfo, reactorsByCh map[byte]Reactor, chDescs []*connection.ChannelDescriptor, onPeerError func(*Peer, interface{})) *Peer {
+func newPeer(pc *peerConn, nodeInfo *NodeInfo, isTrustworthy bool, reactorsByCh map[byte]Reactor, chDescs []*connection.ChannelDescriptor, onPeerError func(*Peer, interface{})) *Peer {
 	// Key and NodeInfo are set after Handshake
 	p := &Peer{
-		peerConn: pc,
-		NodeInfo: nodeInfo,
-		Key:      nodeInfo.PubKey.KeyString(),
+		peerConn:      pc,
+		NodeInfo:      nodeInfo,
+		Key:           nodeInfo.PubKey.KeyString(),
+		isTrustworthy: isTrustworthy,
 	}
 	p.mconn = createMConnection(pc.conn, p, reactorsByCh, chDescs, onPeerError, pc.config.MConfig)
 	p.BaseService = *cmn.NewBaseService(nil, "Peer", p)
@@ -239,4 +241,8 @@ func dial(addr *NetAddress, config *PeerConfig) (net.Conn, error) {
 		return nil, err
 	}
 	return conn, nil
+}
+
+func (p *Peer) IsTrustworthy() bool {
+	return p.isTrustworthy
 }

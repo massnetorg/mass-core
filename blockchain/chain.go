@@ -8,6 +8,7 @@ import (
 	"sort"
 	"time"
 
+	"github.com/massnetorg/mass-core/blockchain/state"
 	"github.com/massnetorg/mass-core/consensus/forks"
 	"github.com/massnetorg/mass-core/logging"
 	"github.com/massnetorg/mass-core/massutil"
@@ -246,6 +247,68 @@ func (chain *Blockchain) getReorganizeNodes(node *BlockNode) (*list.List, *list.
 	return detachNodes, attachNodes
 }
 
+func (chain *Blockchain) connectState(parentBindingState state.Trie, block *massutil.Block) (err error) {
+	txLocs, err := block.TxLoc()
+	if err != nil {
+		return err
+	}
+
+	networkBinding, err := GetNetworkBinding(parentBindingState)
+	if err != nil {
+		return err
+	}
+	oldNetworkBinding := networkBinding
+
+	enforceMassIp2WarmUp := forks.EnforceMASSIP0002WarmUp(block.Height())
+
+	txAddrIndex := make(shTxLoc)
+
+	for txIdx, tx := range block.Transactions() {
+		locInBlock := &txLocs[txIdx]
+
+		for _, txOut := range tx.MsgTx().TxOut {
+			if enforceMassIp2WarmUp {
+				isBinding, err := indexTxOutPkScriptForMassip2(parentBindingState, txOut, txAddrIndex, locInBlock)
+				if err != nil {
+					return err
+				}
+				if isBinding {
+					// add
+					if networkBinding, err = networkBinding.AddInt(txOut.Value); err != nil {
+						return err
+					}
+				}
+			}
+			// payload
+			if !IsCoinBase(tx) {
+				if err := CheckNonceAndSetPoolPkCoinbase(parentBindingState, tx.MsgTx().Payload); err != nil {
+					logging.CPrint(logging.ERROR, "failed to put pool pk coinbase", logging.LogFormat{
+						"block":  block.Hash(),
+						"height": block.Height(),
+						"tx":     tx.Hash(),
+						"err":    err,
+					})
+					return err
+				}
+			}
+		}
+	}
+	if enforceMassIp2WarmUp && oldNetworkBinding.Cmp(networkBinding) != 0 {
+		if err := PutNetworkBinding(parentBindingState, networkBinding); err != nil {
+			return err
+		}
+	}
+
+	if parentBindingState.Hash() != block.MsgBlock().Header.BindingRoot {
+		logging.CPrint(logging.ERROR, "wrong connect state", logging.LogFormat{
+			"height": block.Height(),
+			"block":  block.Hash(),
+		})
+		return ErrMismatchedBindingRoot
+	}
+	return nil
+}
+
 // connectBlock handles connecting the passed node/block to the end of the main
 // (best) chain.
 // TODO: perform benchmark test here
@@ -428,11 +491,25 @@ func (chain *Blockchain) reorganizeChain(detachNodes, attachNodes *list.List, fl
 	// at least a couple of ways accomplish that rollback, but both involve
 	// tweaking the chain.  This approach catches these issues before ever
 	// modifying the chain.
+	var parentBindingState state.Trie
+	var err error
 	for e := attachNodes.Front(); e != nil; e = e.Next() {
 		n := e.Value.(*BlockNode)
 		block, _ := chain.blockCache.getBlock(n.Hash)
-		if err := chain.checkConnectBlock(n, block, flags); err != nil {
+		if parentBindingState == nil {
+			parentBindingState, err = n.ParentBindingState(chain.stateBindingDb)
+			if err != nil {
+				return err
+			}
+			if parentBindingState == nil {
+				return fmt.Errorf("unexpected nil parent binding state")
+			}
+		}
+		if err := chain.checkConnectBlock(n, block, flags, parentBindingState); err != nil {
 			return err
+		}
+		if err = chain.connectState(parentBindingState, block); err != nil {
+			return fmt.Errorf("failed to connect state: %v", err)
 		}
 	}
 
@@ -498,7 +575,7 @@ func (chain *Blockchain) connectBestChain(node *BlockNode, block *massutil.Block
 		// violating any rules and without actually connecting the
 		// block.
 		var err error
-		if err = chain.checkConnectBlock(node, block, flags); err != nil {
+		if err = chain.checkConnectBlock(node, block, flags, nil); err != nil {
 			return err
 		}
 

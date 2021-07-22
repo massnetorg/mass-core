@@ -29,6 +29,7 @@ type BasePeer interface {
 	ServiceFlag() consensus.ServiceFlag
 	TrySend(byte, interface{}) bool
 	IsOutbound() bool
+	IsTrustworthy() bool
 }
 
 //BasePeerSet is the intergace for connection level peer manager
@@ -293,6 +294,9 @@ func (ps *peerSet) addBanScore(peerID string, persistent, transient uint64, reas
 	ps.mtx.Unlock()
 
 	if peer == nil {
+		return
+	}
+	if peer.IsTrustworthy() {
 		return
 	}
 	if ban := peer.addBanScore(persistent, transient, reason); !ban {

@@ -9,6 +9,7 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/massnetorg/mass-core/blockchain/state"
 	"github.com/massnetorg/mass-core/config"
 	"github.com/massnetorg/mass-core/consensus"
 	"github.com/massnetorg/mass-core/consensus/forks"
@@ -987,7 +988,7 @@ func CheckTransactionInputs(tx *massutil.Tx, txHeight uint64, txStore TxStore) (
 	return totalMaxwellIn.Sub(totalMaxwellOut)
 }
 
-func (chain *Blockchain) checkConnectBlock(node *BlockNode, block *massutil.Block, flags BehaviorFlags) error {
+func (chain *Blockchain) checkConnectBlock(node *BlockNode, block *massutil.Block, flags BehaviorFlags, reorgBindingState state.Trie) error {
 	// The coinbase for the Genesis block is not spendable, so just return
 	// an error now.
 	if node.Hash.IsEqual(chain.chainParams.GenesisHash) {
@@ -1081,7 +1082,7 @@ func (chain *Blockchain) checkConnectBlock(node *BlockNode, block *massutil.Bloc
 	}
 
 	if !flags.isFlagSet(BFNoPoCCheck) {
-		if err = chain.validateCoinbase(block, node, txInputStore, totalFees, chain.chainParams); err != nil {
+		if err = chain.validateCoinbase(block, node, txInputStore, totalFees, chain.chainParams, reorgBindingState); err != nil {
 			logging.CPrint(logging.ERROR, "Failed to validate coinbase",
 				logging.LogFormat{
 					"height": block.Height(),
@@ -1124,9 +1125,12 @@ func (chain *Blockchain) checkConnectBlock(node *BlockNode, block *massutil.Bloc
 		// }
 	}
 
-	bst, err := node.ParentBindingState(chain.stateBindingDb)
-	if err != nil {
-		return err
+	bst := reorgBindingState
+	if bst == nil { // TODO: maybe use flags is better
+		bst, err = node.ParentBindingState(chain.stateBindingDb)
+		if err != nil {
+			return err
+		}
 	}
 	if err := checkParsePkScriptNew(block.Height(), bst, nil, txInputStore, block.Transactions()...); err != nil {
 		logging.CPrint(logging.ERROR, "checkParsePkScript error", logging.LogFormat{"err": err})

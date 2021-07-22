@@ -261,7 +261,7 @@ func (chain *Blockchain) checkConnectBlockTemplate(block *massutil.Block, flags 
 		}
 	}
 
-	if err = chain.checkConnectBlock(node, block, flags); err != nil {
+	if err = chain.checkConnectBlock(node, block, flags, nil); err != nil {
 		logging.CPrint(logging.ERROR, "checkConnectBlock failed for block template", logging.LogFormat{"err": err, "height": block.Height()})
 	}
 	return err

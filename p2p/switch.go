@@ -71,6 +71,7 @@ type Switch struct {
 	discv        *discover.Network
 	bannedPeer   map[string]*bannedPeerInfo
 	ipCache      map[string]map[string]struct{}
+	whitelist    map[string]bool
 	db           discover.NetworkDB
 	mtx          sync.Mutex
 }
@@ -89,6 +90,7 @@ func NewSwitch(conf *config.Config) (*Switch, error) {
 		nodePrivKey:  getNodeKey(path.Join(conf.Datastore.Dir, peerIDFileName)),
 		bannedPeer:   make(map[string]*bannedPeerInfo),
 		ipCache:      make(map[string]map[string]struct{}),
+		whitelist:    make(map[string]bool),
 	}
 	sw.BaseService = *cmn.NewBaseService(nil, "P2P Switch", sw)
 
@@ -99,6 +101,11 @@ func NewSwitch(conf *config.Config) (*Switch, error) {
 		return nil, err
 	}
 	sw.db = nodeDB
+
+	// init whitelist
+	for i := range conf.P2P.Whitelist {
+		sw.whitelist[conf.P2P.Whitelist[i]] = true
+	}
 
 	dataJson, err := sw.db.Get([]byte(bannedPeerKey))
 	if err != nil {
@@ -306,7 +313,8 @@ func (sw *Switch) AddPeer(pc *peerConn) error {
 		return err
 	}
 
-	peer := newPeer(pc, peerNodeInfo, sw.reactorsByCh, sw.chDescs, sw.StopPeerForError)
+	peerIP, _, _ := net.SplitHostPort(pc.conn.RemoteAddr().String())
+	peer := newPeer(pc, peerNodeInfo, sw.whitelist[peerIP], sw.reactorsByCh, sw.chDescs, sw.StopPeerForError)
 	if err := sw.filterConnByPeer(peer); err != nil {
 		return err
 	}
@@ -516,15 +524,17 @@ func (sw *Switch) filterConnByIP(ip string) error {
 }
 
 func (sw *Switch) filterConnByPeer(peer *Peer) error {
-	if err := sw.checkBannedPeer(peer.ID()); err != nil {
-		logging.CPrint(logging.WARN, "checkBannedPeer error", logging.LogFormat{"err": err, "address": peer.Addr().String(), "id": peer.ID()})
-		return err
-	}
+	if !peer.IsTrustworthy() {
+		if err := sw.checkBannedPeer(peer.ID()); err != nil {
+			logging.CPrint(logging.WARN, "checkBannedPeer error", logging.LogFormat{"err": err, "address": peer.Addr().String(), "id": peer.ID()})
+			return err
+		}
 
-	ip, _, _ := net.SplitHostPort(peer.Addr().String())
-	if err := sw.checkBannedIP(ip); err != nil {
-		logging.CPrint(logging.WARN, "checkBannedIP error", logging.LogFormat{"err": err, "address": peer.Addr().String(), "id": peer.ID()})
-		return err
+		ip, _, _ := net.SplitHostPort(peer.Addr().String())
+		if err := sw.checkBannedIP(ip); err != nil {
+			logging.CPrint(logging.WARN, "checkBannedIP error", logging.LogFormat{"err": err, "address": peer.Addr().String(), "id": peer.ID()})
+			return err
+		}
 	}
 
 	if sw.nodeInfo.PubKey.Equals(peer.PubKey().Wrap()) {

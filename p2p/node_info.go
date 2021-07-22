@@ -26,6 +26,9 @@ func (info *NodeInfo) CompatibleWith(other *NodeInfo) error {
 	if info.Network != other.Network {
 		return fmt.Errorf("peer is on a different network. Peer network: %v, node network: %v", other.Network, info.Network)
 	}
+	if len(other.Version) == 0 || info.Version[0] != other.Version[0] {
+		return fmt.Errorf("major version is not compatible, peer version: %s, node version: %s", other.Version, info.Version)
+	}
 	return nil
 }
 
