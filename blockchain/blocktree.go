@@ -150,6 +150,9 @@ func (node *BlockNode) BindingState(stateDb state.Database) (state.Trie, error) 
 			return nil, err
 		}
 	}
+	if node.bindingState == nil {
+		return nil, fmt.Errorf("BindingRoot not found at %d, %s", node.blockHeader.Height, node.Hash)
+	}
 	return stateDb.CopyTrie(node.bindingState), err
 }
 
@@ -168,6 +171,12 @@ func (node *BlockNode) ParentBindingState(stateDb state.Database) (state.Trie, e
 			}
 			node.Parent.bindingState, err = stateDb.OpenBindingTrie(node.Parent.blockHeader.BindingRoot)
 		}
+		if err != nil {
+			return nil, err
+		}
+	}
+	if node.Parent.bindingState == nil {
+		return nil, fmt.Errorf("parent BindingRoot not found at %d, %s", node.blockHeader.Height, node.Hash)
 	}
 	return stateDb.CopyTrie(node.Parent.bindingState), err
 }
