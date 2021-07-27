@@ -248,6 +248,12 @@ func (chain *Blockchain) getReorganizeNodes(node *BlockNode) (*list.List, *list.
 }
 
 func (chain *Blockchain) connectState(parentBindingState state.Trie, block *massutil.Block) (err error) {
+
+	if !forks.EnforceMASSIP0002WarmUp(block.Height()) {
+		// fast return
+		return nil
+	}
+
 	txLocs, err := block.TxLoc()
 	if err != nil {
 		return err
@@ -259,24 +265,20 @@ func (chain *Blockchain) connectState(parentBindingState state.Trie, block *mass
 	}
 	oldNetworkBinding := networkBinding
 
-	enforceMassIp2WarmUp := forks.EnforceMASSIP0002WarmUp(block.Height())
-
 	txAddrIndex := make(shTxLoc)
 
 	for txIdx, tx := range block.Transactions() {
 		locInBlock := &txLocs[txIdx]
 
 		for _, txOut := range tx.MsgTx().TxOut {
-			if enforceMassIp2WarmUp {
-				isBinding, err := indexTxOutPkScriptForMassip2(parentBindingState, txOut, txAddrIndex, locInBlock)
-				if err != nil {
+			isBinding, err := indexTxOutPkScriptForMassip2(parentBindingState, txOut, txAddrIndex, locInBlock)
+			if err != nil {
+				return err
+			}
+			if isBinding {
+				// add
+				if networkBinding, err = networkBinding.AddInt(txOut.Value); err != nil {
 					return err
-				}
-				if isBinding {
-					// add
-					if networkBinding, err = networkBinding.AddInt(txOut.Value); err != nil {
-						return err
-					}
 				}
 			}
 			// payload
@@ -293,7 +295,7 @@ func (chain *Blockchain) connectState(parentBindingState state.Trie, block *mass
 			}
 		}
 	}
-	if enforceMassIp2WarmUp && oldNetworkBinding.Cmp(networkBinding) != 0 {
+	if oldNetworkBinding.Cmp(networkBinding) != 0 {
 		if err := PutNetworkBinding(parentBindingState, networkBinding); err != nil {
 			return err
 		}
