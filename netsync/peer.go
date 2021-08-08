@@ -2,8 +2,10 @@ package netsync
 
 import (
 	"encoding/hex"
+	"math/rand"
 	"net"
 	"sync"
+	"time"
 
 	"github.com/massnetorg/mass-core/consensus"
 	"github.com/massnetorg/mass-core/errors"
@@ -333,16 +335,26 @@ func (ps *peerSet) bestPeer(flag consensus.ServiceFlag) *peer {
 	ps.mtx.RLock()
 	defer ps.mtx.RUnlock()
 
-	var bestPeer *peer
+	bestPeers := make([]*peer, 0, len(ps.peers))
+
+	bestHeight := uint64(0)
 	for _, p := range ps.peers {
-		if !p.services.IsEnable(flag) {
+		if !p.services.IsEnable(flag) || p.height < bestHeight {
 			continue
 		}
-		if bestPeer == nil || p.height > bestPeer.height {
-			bestPeer = p
+		if p.height > bestHeight {
+			bestPeers = bestPeers[:0]
+			bestHeight = p.height
 		}
+		bestPeers = append(bestPeers, p)
 	}
-	return bestPeer
+
+	if len(bestPeers) == 0 || bestHeight == 0 {
+		return nil
+	}
+
+	r := rand.New(rand.NewSource(time.Now().Unix()))
+	return bestPeers[r.Intn(len(bestPeers))]
 }
 
 func (ps *peerSet) broadcastMinedBlock(block *massutil.Block) error {
@@ -367,9 +379,6 @@ func (ps *peerSet) broadcastMinedBlock(block *massutil.Block) error {
 }
 
 func (ps *peerSet) broadcastNewStatus(bestBlock, genesisBlock *massutil.Block) error {
-	ps.mtx.RLock()
-	defer ps.mtx.RUnlock()
-
 	bestBlockHash := bestBlock.Hash()
 	peers := ps.peersWithoutBlock(bestBlockHash)
 

@@ -30,7 +30,7 @@ var (
 	errBlockCacheNotExists       = errors.New("required block cache not exists")
 	ErrInvalidTime               = errors.New("block timestamp has a higher precsion the one second")
 	ErrTimeTooOld                = errors.New("block timestamp is not after expected prevNode")
-	ErrTimeTooNew                = errors.New("block timestamp of uinx is too far in the future")
+	ErrTimeTooNew                = errors.New("block timestamp is too far in the future")
 	ErrUnexpectedDifficulty      = errors.New("block difficulty is not the expected value")
 	ErrUnexpectedChallenge       = errors.New("block challenge is not the expected value")
 	ErrInvalidMerkleRoot         = errors.New("block transaction merkle root is invalid")

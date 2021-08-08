@@ -649,6 +649,11 @@ func (tp *TxPool) maybeAcceptTransaction(tx *massutil.Tx, isNew, rateLimit bool)
 	// used later.
 	txFee, err := CheckTransactionInputs(tx, nextBlockHeight, txStore)
 	if err != nil {
+		logging.CPrint(logging.WARN, "check transaction inputs in pool failed", logging.LogFormat{
+			"tx":         tx.Hash(),
+			"nextHeight": nextBlockHeight,
+			"err":        err,
+		})
 		return nil, err
 	}
 	if payload := DecodePayload(tx.MsgTx().Payload); payload != nil {

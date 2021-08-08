@@ -84,7 +84,9 @@ func (chain *Blockchain) processOrphans(hash *wire.Hash, flags BehaviorFlags) er
 				"child_height": orphan.block.Height(),
 			})
 		if err := chain.maybeAcceptBlock(orphan.block, BFNone); err != nil {
-			chain.errCache.Add(orphan.block.Hash().String(), err)
+			if err != ErrTimeTooNew {
+				chain.errCache.Add(orphan.block.Hash().String(), err)
+			}
 			return err
 		}
 
@@ -155,7 +157,9 @@ func (chain *Blockchain) processBlock(block *massutil.Block, flags BehaviorFlags
 	// Perform preliminary sanity checks on the block and its transactions.
 	err = checkBlockSanity(block, chain.info.chainID, chain.chainParams.PocLimit, flags)
 	if err != nil {
-		chain.errCache.Add(blockHash.String(), err)
+		if err != ErrTimeTooNew {
+			chain.errCache.Add(blockHash.String(), err)
+		}
 		return false, err
 	}
 
@@ -194,7 +198,9 @@ func (chain *Blockchain) processBlock(block *massutil.Block, flags BehaviorFlags
 	// The block has passed all context independent checks and appears sane
 	// enough to potentially accept it into the block chain.
 	if err := chain.maybeAcceptBlock(block, flags); err != nil {
-		chain.errCache.Add(blockHash.String(), err)
+		if err != ErrTimeTooNew {
+			chain.errCache.Add(blockHash.String(), err)
+		}
 		return false, err
 	}
 

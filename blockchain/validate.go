@@ -341,6 +341,8 @@ func checkHeaderTimestamp(header *wire.BlockHeader) error {
 				"allowed":        allowed.Unix(),
 				"timestamp_unix": header.Timestamp.Unix(),
 				"timestamp":      header.Timestamp.Format(time.RFC3339),
+				"height":         header.Height,
+				"block":          header.BlockHash(),
 			})
 		return ErrTimeTooNew
 	}
@@ -1053,6 +1055,13 @@ func (chain *Blockchain) checkConnectBlock(node *BlockNode, block *massutil.Bloc
 	for i, tx := range transactions {
 		txFee, err := CheckTransactionInputs(tx, node.Height, txInputStore)
 		if err != nil {
+			logging.CPrint(logging.ERROR, "check transaction inputs failed", logging.LogFormat{
+				"tx":     tx.Hash(),
+				"index":  i,
+				"height": node.Height,
+				"block":  node.Hash,
+				"err":    err,
+			})
 			return err
 		}
 		if i != 0 && enforceMassIp2WarmUp {
