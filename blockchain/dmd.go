@@ -180,6 +180,11 @@ func (chain *Blockchain) submitFaultPubKeyFromHash(hash0, hash1 *wire.Hash) erro
 	}
 
 	// insert faultPk into database punishment storage, and insert it into punishPool
+	if exists, err := chain.db.ExistsPunishment(fpk.PubKey); err != nil {
+		return err
+	} else if exists {
+		return nil
+	}
 	if err := chain.db.InsertPunishment(fpk); err != nil {
 		return err
 	}

@@ -87,17 +87,39 @@ func (db *ChainDb) FetchAllPunishment() ([]*wire.FaultPubKey, error) {
 	iter := db.stor.NewIterator(storage.BytesPrefix(punishmentPrefix))
 	defer iter.Release()
 
+	var deleteRequired bool
+	var deleteBatch = db.stor.NewBatch()
+	defer deleteBatch.Release()
+
 	for iter.Next() {
 		fpk, err := wire.NewFaultPubKeyFromBytes(iter.Value(), wire.DB)
 		if err != nil {
 			return nil, err
+		}
+		fpkSha := wire.DoubleHashH(fpk.PubKey.SerializeUncompressed())
+		if exists, _ := db.faultPkExists(&fpkSha); exists {
+			if punishmentKey, err := punishmentPubKeyToKey(fpk.PubKey); err != nil {
+				return nil, err
+			} else {
+				deleteRequired = true
+				deleteBatch.Delete(punishmentKey)
+			}
+			continue
 		}
 		res = append(res, fpk)
 	}
 	if err := iter.Error(); err != nil {
 		return nil, err
 	}
-	return res, nil
+
+	var err error
+	if deleteRequired {
+		db.dbLock.Lock()
+		defer db.dbLock.Unlock()
+		err = db.stor.Write(deleteBatch)
+	}
+
+	return res, err
 }
 
 func insertBlockPunishments(batch storage.Batch, blk *massutil.Block) error {
