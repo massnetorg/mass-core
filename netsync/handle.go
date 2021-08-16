@@ -368,6 +368,9 @@ func (sm *SyncManager) handleStatusResponseMsg(basePeer BasePeer, msg *StatusRes
 }
 
 func (sm *SyncManager) handleTransactionMsg(peer *peer, msg *TransactionMessage) {
+	if sm.config.P2P.IgnoreTransactionMsg {
+		return
+	}
 	tx, err := msg.GetTransaction()
 	if err != nil {
 		sm.peers.addBanScore(peer.ID(), 0, 10, "fail on get tx from message")

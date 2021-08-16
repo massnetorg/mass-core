@@ -38,14 +38,15 @@ type Chain struct {
 }
 
 type P2P struct {
-	Seeds            string   `json:"seeds"`
-	AddPeer          []string `json:"add_peer"`
-	SkipUpnp         bool     `json:"skip_upnp"`
-	HandshakeTimeout uint32   `json:"handshake_timeout"`
-	DialTimeout      uint32   `json:"dial_timeout"`
-	VaultMode        bool     `json:"vault_mode"`
-	ListenAddress    string   `json:"listen_address"`
-	Whitelist        []string `json:"whitelist"`
+	Seeds                string   `json:"seeds"`
+	AddPeer              []string `json:"add_peer"`
+	SkipUpnp             bool     `json:"skip_upnp"`
+	HandshakeTimeout     uint32   `json:"handshake_timeout"`
+	DialTimeout          uint32   `json:"dial_timeout"`
+	VaultMode            bool     `json:"vault_mode"`
+	ListenAddress        string   `json:"listen_address"`
+	Whitelist            []string `json:"whitelist"`
+	IgnoreTransactionMsg bool     `json:"ignore_transaction_message"`
 }
 
 type Log struct {
