@@ -796,11 +796,14 @@ func newBlockTemplate(chain *Blockchain, payoutAddresses []massutil.Address, tem
 					depList = list.New()
 					dependers[*originHash] = depList
 				}
-				depList.PushBack(prioItem)
 				if prioItem.dependsOn == nil {
 					prioItem.dependsOn = make(
 						map[wire.Hash]struct{})
 				}
+				if _, exists = prioItem.dependsOn[*originHash]; exists {
+					continue
+				}
+				depList.PushBack(prioItem)
 				prioItem.dependsOn[*originHash] = struct{}{}
 			}
 		}
