@@ -319,9 +319,9 @@ func (tree *BlockTree) expandRootBlockNode(node *BlockNode) error {
 	for _, childNode := range childNodes {
 		childNode.Parent = node
 		tree.children[*node.Hash] = append(tree.children[*node.Hash], childNode)
-		recursiveAddChildrenCapSum(tree, node.Hash, node.CapSum)
-		tree.rootNode = node
 	}
+	tree.rootNode = node
+	recursiveAddChildrenCapSum(tree, node.Hash, node.CapSum)
 	tree.index[*node.Hash] = node
 	tree.children[node.Previous] = append(tree.children[node.Previous], node)
 
